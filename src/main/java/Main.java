@@ -20,18 +20,19 @@ public class Main {
             System.out.println("Сервер запущен");
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                try (PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));) {
+                    System.out.println("Установлено новое соединение");
+                    final String inputText = in.readLine().toLowerCase();
+                    System.out.println("Запрос по слову: " + inputText);
 
-                System.out.println("Установлено новое соединение");
-                final String inputText = in.readLine().toLowerCase();
-                System.out.println("Запрос по слову: " + inputText);
+                    List<PageEntry> foundPageEntries = engine.search(inputText);
+                    String jsonResult = gson.toJson(foundPageEntries);
 
-                List<PageEntry> foundPageEntries = engine.search(inputText);
-                String jsonResult = gson.toJson(foundPageEntries);
-
-                out.println(jsonResult);
-
+                    out.println(jsonResult);
+                } catch (IOException exception) {
+                    System.out.println(exception.getMessage());
+                }
             }
         } catch (IOException exception) {
             System.out.println(exception.getMessage());
